@@ -75,7 +75,7 @@ class FirestoreService {
 
   // ==================== 4. REAL-TIME TRACKING & STATUS METHODS ====================
 
-  // 4 Apps (Customer, Merchant, Delivery, Admin) Instant Sync కోసం trackingHistory Array ని ఉపయోగించాము
+  // 4 Apps (Customer, Merchant, Delivery, Admin) Instant Sync కోసం trackingHistory Array ఉపయోగించబడుతుంది
   static Future<void> updateOrderStatusWithTracking({
     required String orderId,
     required String newStatus,
@@ -105,67 +105,89 @@ class FirestoreService {
     }
   }
 
-  // Merchant Order Accept Logic
+  // A. Merchant Order Accept Logic (సపరేట్ కలెక్షన్ తీసేసి నేరుగా 'orders' కలెక్షన్ లోనే 'Preparing' గా మార్చడం)
   static Future<void> acceptOrder({
     required String orderId,
-    required Map<String, dynamic> orderData,
+    Map<String, dynamic>? orderData,
   }) async {
     try {
-      await _db.collection('order_accept_merchant').doc(orderId).set({
-        ...orderData,
-        'orderId': orderId,
-        'acceptedAt': FieldValue.serverTimestamp(),
+      final orderRef = _db.collection('orders').doc(orderId);
+
+      await orderRef.update({
         'status': 'Preparing',
         'orderStatus': 'Preparing',
+        'currentStatus': 'Preparing',
+        'acceptedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+        'trackingHistory': FieldValue.arrayUnion([
+          {
+            'status': 'Preparing',
+            'title': 'Order Accepted & Preparing',
+            'timestamp': DateTime.now().toIso8601String(),
+            'updatedBy': 'Merchant',
+          }
+        ]),
       });
-
-      await updateOrderStatusWithTracking(
-        orderId: orderId,
-        newStatus: 'Preparing',
-        title: 'Order Accepted & Preparing',
-        updatedBy: 'Merchant',
-      );
     } catch (e) {
       debugPrint("Error accepting order: $e");
       rethrow;
     }
   }
 
-  // Merchant Order Reject Logic
+  // B. Merchant Order Reject Logic (సపరేట్ 'rejected_orders' కలెక్షన్ లేకుండా నేరుగా 'orders' లోనే 'Cancelled' చేయడం)
   static Future<void> rejectOrder({
     required String orderId,
-    required Map<String, dynamic> orderData,
     required String reason,
+    Map<String, dynamic>? orderData,
   }) async {
     try {
-      await _db.collection('rejected_orders').doc(orderId).set({
-        ...orderData,
-        'orderId': orderId,
-        'rejectReason': reason,
-        'rejectedAt': FieldValue.serverTimestamp(),
+      final orderRef = _db.collection('orders').doc(orderId);
+
+      await orderRef.update({
         'status': 'Cancelled',
         'orderStatus': 'Cancelled',
+        'currentStatus': 'Cancelled',
+        'rejectReason': reason,
+        'rejectedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+        'trackingHistory': FieldValue.arrayUnion([
+          {
+            'status': 'Cancelled',
+            'title': 'Order Cancelled: $reason',
+            'timestamp': DateTime.now().toIso8601String(),
+            'updatedBy': 'Merchant',
+          }
+        ]),
       });
-
-      await updateOrderStatusWithTracking(
-        orderId: orderId,
-        newStatus: 'Cancelled',
-        title: 'Order Cancelled: $reason',
-        updatedBy: 'Merchant',
-      );
     } catch (e) {
       debugPrint("Error rejecting order: $e");
       rethrow;
     }
   }
 
-  // Update Order Status to Packing Ready
+  // C. Update Order Status to Packing Ready (Delivery Partner App కి వెంటనే పంపడానికి 'Ready_For_Pickup' గా మార్చడం)
   static Future<void> markOrderPackingReady(String orderId) async {
-    await updateOrderStatusWithTracking(
-      orderId: orderId,
-      newStatus: 'Packing_Ready',
-      title: 'Order Packed & Ready for Pickup',
-      updatedBy: 'Merchant',
-    );
+    try {
+      final orderRef = _db.collection('orders').doc(orderId);
+
+      await orderRef.update({
+        'status': 'Ready_For_Pickup',
+        'orderStatus': 'Ready_For_Pickup',
+        'currentStatus': 'Ready_For_Pickup',
+        'packingReadyAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+        'trackingHistory': FieldValue.arrayUnion([
+          {
+            'status': 'Ready_For_Pickup',
+            'title': 'Packing Completed & Ready for Pickup',
+            'timestamp': DateTime.now().toIso8601String(),
+            'updatedBy': 'Merchant',
+          }
+        ]),
+      });
+    } catch (e) {
+      debugPrint("Error marking packing ready: $e");
+      rethrow;
+    }
   }
 }

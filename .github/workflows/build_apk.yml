@@ -5,6 +5,7 @@ on:
     branches: 
       - main
       - backup-today # 👈 Ee branch add cheyyali
+      - dev-merchant-app
 
 permissions:
   contents: write
