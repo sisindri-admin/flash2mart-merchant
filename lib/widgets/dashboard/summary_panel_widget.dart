@@ -27,7 +27,7 @@ class SummaryPanelWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFFF1F5F9), width: 1.2),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 6),
+          BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 6),
         ],
       ),
       child: Column(
@@ -72,7 +72,7 @@ class SummaryPanelWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withAlpha(26),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: color, size: 16),

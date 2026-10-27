@@ -145,19 +145,29 @@ class _MerchantAuthScreenState extends State<MerchantAuthScreen>
 
       final uid = userCredential.user!.uid;
 
-      await _firestore.collection('merchants').doc(uid).set({
+      final Map<String, dynamic> merchantData = {
         'uid': uid,
         'storeName': storeName,
+        'shopName': storeName,
+        'name': storeName,
         'ownerName': ownerName,
         'email': email,
         'phone': phone,
         'category': selectedCategory,
         'location': location,
+        'address': location,
         'latitude': _detectedLat,
         'longitude': _detectedLng,
+        'storeLat': _detectedLat,
+        'storeLng': _detectedLng,
         'isOnline': true,
         'createdAt': FieldValue.serverTimestamp(),
-      });
+      };
+      if (_detectedLat != null && _detectedLng != null) {
+        merchantData['storeLocation'] = GeoPoint(_detectedLat!, _detectedLng!);
+        merchantData['merchantLocation'] = GeoPoint(_detectedLat!, _detectedLng!);
+      }
+      await _firestore.collection('merchants').doc(uid).set(merchantData);
 
       if (!mounted) return;
 

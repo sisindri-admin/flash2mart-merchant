@@ -359,8 +359,13 @@ class _MerchantDashboardState extends State<MerchantDashboard> {
                           pCategory.toLowerCase().contains(_searchQuery.toLowerCase());
                       if (!matchesSearch) return false;
 
-                      if (_selectedCategory != 'All' && pCategory != _selectedCategory) {
-                        return false;
+                      if (_selectedCategory != 'All') {
+                        final bool isCombo = data['isCombo'] == true || pCategory.toLowerCase().contains('combo');
+                        if (_selectedCategory == 'Combo Offers & Deals' || _selectedCategory == 'Combo Offers') {
+                          if (!isCombo && !pCategory.toLowerCase().contains('combo')) return false;
+                        } else if (pCategory != _selectedCategory) {
+                          return false;
+                        }
                       }
 
                       return true;
@@ -621,7 +626,7 @@ class _MerchantDashboardState extends State<MerchantDashboard> {
               ),
               shape: BoxShape.circle,
               boxShadow: [
-                BoxShadow(color: primaryBlue.withOpacity(0.2), blurRadius: 4),
+                BoxShadow(color: primaryBlue.withAlpha(51), blurRadius: 4),
               ],
             ),
             child: Center(
@@ -644,7 +649,7 @@ class _MerchantDashboardState extends State<MerchantDashboard> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4),
+          BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 4),
         ],
       ),
       child: TextField(
@@ -711,7 +716,7 @@ class _MerchantDashboardState extends State<MerchantDashboard> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 3)),
+            BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 8, offset: const Offset(0, 3)),
           ],
         ),
         child: ClipRRect(
@@ -727,7 +732,7 @@ class _MerchantDashboardState extends State<MerchantDashboard> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.65),
+                      color: Colors.black.withAlpha(166),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Row(
@@ -767,7 +772,7 @@ class _MerchantDashboardState extends State<MerchantDashboard> {
             width: 1.2,
           ),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 6),
+            BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 6),
           ],
         ),
         child: Column(
@@ -776,7 +781,7 @@ class _MerchantDashboardState extends State<MerchantDashboard> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: primaryBlue.withOpacity(0.1),
+                color: primaryBlue.withAlpha(26),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.camera_alt_rounded, color: primaryBlue, size: 24),
@@ -819,7 +824,7 @@ class _MerchantDashboardState extends State<MerchantDashboard> {
                 color: primaryBlue,
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
-                  BoxShadow(color: primaryBlue.withOpacity(0.18), blurRadius: 4),
+                  BoxShadow(color: primaryBlue.withAlpha(46), blurRadius: 4),
                 ],
               ),
               child: const Row(
@@ -964,7 +969,7 @@ class _MerchantDashboardState extends State<MerchantDashboard> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: cardGreenBorder.withOpacity(0.3)),
+          border: Border.all(color: cardGreenBorder.withAlpha(77)),
         ),
         child: Center(
           child: Text(

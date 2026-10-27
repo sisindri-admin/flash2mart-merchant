@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 
 class NewOrderDialog extends StatelessWidget {
   final String orderId;
@@ -30,7 +29,6 @@ class NewOrderDialog extends StatelessWidget {
             alignment: Alignment.topLeft,
             child: TextButton.icon(
               onPressed: () {
-                FlutterRingtonePlayer.stop();
                 Navigator.pop(context);
                 onUpdateStatus(orderId, 'rejected');
               },
@@ -40,7 +38,7 @@ class NewOrderDialog extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Text("New Order Received!", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text("New Order Received!", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           Text("₹${amount.toStringAsFixed(2)}", style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Color(0xFF16A34A))),
           const SizedBox(height: 20),
           SizedBox(
@@ -49,7 +47,6 @@ class NewOrderDialog extends StatelessWidget {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF16A34A)),
               onPressed: () {
-                FlutterRingtonePlayer.stop();
                 Navigator.pop(context);
                 onUpdateStatus(orderId, 'accepted');
               },

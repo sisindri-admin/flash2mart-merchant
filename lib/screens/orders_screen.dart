@@ -46,7 +46,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
         ],
       ),
       body: StreamBuilder<QuerySnapshot>(
-        // 1. మెయిన్ 'orders' కలెక్షన్ నుండి మాత్రమే డేటా రీడ్ చేస్తాం
         stream: FirebaseFirestore.instance
             .collection('orders')
             .where('merchantId', isEqualTo: merchantId)
@@ -60,20 +59,12 @@ class _OrdersScreenState extends State<OrdersScreen> {
           
           final filteredDocs = allDocs.where((doc) {
             final data = doc.data() as Map<String, dynamic>;
-            final status = (data['status'] ?? data['orderStatus'] ?? '').toString().toLowerCase();
+            final status = (data['orderStatus'] ?? data['status'] ?? '').toString().toLowerCase();
 
             if (_showHistoryOnly) {
               return status == 'completed' || status == 'delivered' || status == 'cancelled';
             } else {
-              return status == 'pending' || 
-                     status == 'placed' || 
-                     status == 'preparing' || 
-                     status == 'accepted' || 
-                     status == 'packing_ready' || 
-                     status == 'ready_for_pickup' || 
-                     status == 'on_the_way' ||
-                     status == 'reached_store' ||
-                     status == 'picked_up';
+              return status == 'pending' || status == 'placed' || status == 'preparing' || status == 'accepted' || status == 'packing_ready' || status == 'ready_for_pickup' || status == 'on_the_way';
             }
           }).toList();
 
@@ -107,17 +98,18 @@ class _OrdersScreenState extends State<OrdersScreen> {
               final orderId = data['orderId'] ?? doc.id;
               final customerName = data['customerName'] ?? data['userName'] ?? 'Customer';
               
+              // Merchant కి ఉత్పత్తుల ధర మొత్తం మాత్రమే కనిపిస్తుంది
               final itemsTotal = data['itemsTotal'] ?? data['itemTotal'] ?? _calculateItemsTotal(data['items']);
               
-              final rawStatus = (data['status'] ?? data['orderStatus'] ?? 'Pending').toString();
+              final rawStatus = (data['orderStatus'] ?? data['status'] ?? 'Pending').toString();
               final items = (data['items'] as List<dynamic>?) ?? [];
 
               final bool isPackingReady = rawStatus.toLowerCase() == 'packing_ready' || rawStatus.toLowerCase() == 'ready_for_pickup';
-              final bool isPlaced = rawStatus.toLowerCase() == 'placed' || rawStatus.toLowerCase() == 'pending';
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
+                  // Packing Ready అయినప్పుడు కార్డ్ గ్రీన్ రంగులోకి మారుతుంది
                   color: isPackingReady ? const Color(0xFFF0FDF4) : Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
@@ -126,7 +118,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: isPackingReady ? Colors.green.withOpacity(0.1) : Colors.black.withOpacity(0.03),
+                      color: isPackingReady ? Colors.green.withAlpha(26) : Colors.black.withAlpha(8),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -173,69 +165,49 @@ class _OrdersScreenState extends State<OrdersScreen> {
                       }),
                       const SizedBox(height: 12),
 
-                      // Status Buttons Section
-                      if (!_showHistoryOnly) ...[
-                        if (isPlaced)
-                          SizedBox(
-                            width: double.infinity,
-                            height: 44,
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF2563EB),
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                              ),
-                              icon: const Icon(Icons.check_circle_outline, size: 18),
-                              label: const Text('ACCEPT ORDER (PREPARING)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                              onPressed: () async {
-                                // A. Merchant Accept చేసినప్పుడు: Status 'Preparing' గా మారుతుంది
-                                await FirestoreService.acceptOrder(orderId: doc.id);
-                              },
+                      // Status & Packing Button Section
+                      if (!isPackingReady && !_showHistoryOnly)
+                        SizedBox(
+                          width: double.infinity,
+                          height: 44,
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF2563EB),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             ),
-                          )
-                        else if (rawStatus.toLowerCase() == 'preparing')
-                          SizedBox(
-                            width: double.infinity,
-                            height: 44,
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF16A34A),
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                              ),
-                              icon: const Icon(Icons.inventory_2_outlined, size: 18),
-                              label: const Text('PACKING READY', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                              onPressed: () async {
-                                // B. Merchant "PACKING READY" క్లిక్ చేసినప్పుడు: Status 'Ready_For_Pickup' గా మారుతుంది
-                                await FirestoreService.markOrderPackingReady(doc.id);
-                              },
-                            ),
-                          )
-                        else
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                            decoration: BoxDecoration(
-                              color: _getStatusBgColor(rawStatus),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                _getStatusIcon(rawStatus),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'Status: ${rawStatus.replaceAll('_', ' ').toUpperCase()}',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                    color: _getStatusTextColor(rawStatus),
-                                  ),
-                                ),
-                              ],
-                            ),
+                            icon: const Icon(Icons.inventory_2_outlined, size: 18),
+                            label: const Text('PACKING READY', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                            onPressed: () async {
+                              // FirestoreService ద్వారా trackingHistory అరే తో పాటు Firestore నిమిషాల్లో update అవుతుంది
+                              await FirestoreService.markOrderPackingReady(doc.id);
+                            },
                           ),
-                      ],
+                        )
+                      else
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                          decoration: BoxDecoration(
+                            color: _getStatusBgColor(rawStatus),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _getStatusIcon(rawStatus),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Status: ${rawStatus.replaceAll('_', ' ').toUpperCase()}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  color: _getStatusTextColor(rawStatus),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                     ],
                   ),
                 ),

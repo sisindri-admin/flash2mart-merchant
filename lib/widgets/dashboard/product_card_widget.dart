@@ -39,6 +39,9 @@ class ProductCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Map<String, dynamic> rawData = rawDoc.data() is Map<String, dynamic> ? rawDoc.data() as Map<String, dynamic> : {};
+    final bool isCombo = rawData['isCombo'] == true || category.toLowerCase().contains('combo');
+    final String discountTag = (rawData['discountTag'] ?? '').toString().trim();
     final int stockQty = stock is int ? stock : int.tryParse('$stock') ?? 0;
     final bool isOutOfStock = stockQty <= 0;
     final bool isLowStock = stockQty > 0 && stockQty < 100;
@@ -51,7 +54,7 @@ class ProductCardWidget extends StatelessWidget {
           width: double.infinity,
           height: double.infinity,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Container(
+          errorBuilder: (context, error, stackTrace) => Container(
             color: const Color(0xFFE2E8F0),
             child: const Icon(Icons.broken_image, size: 28, color: Colors.grey),
           ),
@@ -68,7 +71,7 @@ class ProductCardWidget extends StatelessWidget {
         width: double.infinity,
         height: double.infinity,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
+        errorBuilder: (context, error, stackTrace) => Container(
           color: const Color(0xFFE2E8F0),
           child: const Icon(Icons.broken_image, size: 28, color: Colors.grey),
         ),
@@ -110,7 +113,7 @@ class ProductCardWidget extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withAlpha(15),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),
@@ -123,30 +126,66 @@ class ProductCardWidget extends StatelessWidget {
               Positioned.fill(
                 child: imageWidget,
               ),
-              if (brand.isNotEmpty || category.isNotEmpty)
-                Positioned(
-                  top: 6,
-                  left: 6,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.78),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: Colors.white24, width: 0.6),
-                    ),
-                    child: Text(
-                      brand.isNotEmpty ? brand : category,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 9,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.2,
+              Positioned(
+                top: 6,
+                left: 6,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isCombo || discountTag.isNotEmpty)
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 3),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFE11D48), Color(0xFFF97316)],
+                          ),
+                          borderRadius: BorderRadius.circular(6),
+                          boxShadow: const [
+                            BoxShadow(color: Colors.black38, blurRadius: 3),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.stars_rounded, size: 10, color: Colors.white),
+                            const SizedBox(width: 3),
+                            Text(
+                              isCombo ? '🎁 COMBO${discountTag.isNotEmpty ? ' • $discountTag' : ''}' : discountTag,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 8.5,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ),
+                    if (brand.isNotEmpty || category.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withAlpha(199),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: Colors.white24, width: 0.6),
+                        ),
+                        child: Text(
+                          brand.isNotEmpty ? brand : category,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
+              ),
               Positioned(
                 top: 6,
                 right: 6,
@@ -158,7 +197,7 @@ class ProductCardWidget extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(4.5),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.75),
+                          color: Colors.black.withAlpha(191),
                           shape: BoxShape.circle,
                           border: Border.all(color: const Color(0xFF60A5FA), width: 0.8),
                         ),
@@ -175,9 +214,9 @@ class ProductCardWidget extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(4.5),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.75),
+                          color: Colors.black.withAlpha(191),
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.redAccent.withOpacity(0.8), width: 0.8),
+                          border: Border.all(color: Colors.redAccent.withAlpha(204), width: 0.8),
                         ),
                         child: const Icon(
                           Icons.delete_outline_rounded,
@@ -198,9 +237,9 @@ class ProductCardWidget extends StatelessWidget {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Colors.black.withOpacity(0.96),
-                        Colors.black.withOpacity(0.85),
-                        Colors.black.withOpacity(0.50),
+                        Colors.black.withAlpha(245),
+                        Colors.black.withAlpha(217),
+                        Colors.black.withAlpha(128),
                         Colors.transparent,
                       ],
                       stops: const [0.0, 0.4, 0.8, 1.0],
@@ -265,7 +304,7 @@ class ProductCardWidget extends StatelessWidget {
                           color: stockBadgeBg,
                           borderRadius: BorderRadius.circular(4),
                           boxShadow: [
-                            BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 2),
+                            BoxShadow(color: Colors.black.withAlpha(77), blurRadius: 2),
                           ],
                         ),
                         child: Text(

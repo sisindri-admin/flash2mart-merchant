@@ -188,7 +188,7 @@ class StoreHeaderWidget extends StatelessWidget {
               ),
               shape: BoxShape.circle,
               boxShadow: [
-                BoxShadow(color: primaryBlue.withOpacity(0.2), blurRadius: 4),
+                BoxShadow(color: primaryBlue.withAlpha(51), blurRadius: 4),
               ],
             ),
             child: Center(
