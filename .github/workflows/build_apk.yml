@@ -1,0 +1,58 @@
+name: Build Flash2Mart Merchant APK
+
+on:
+  push:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build Release APK
+        run: flutter build apk --release
+
+      - name: Rename APK for Mobile Download
+        run: cp build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/flash2mart-merchant-release.apk
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flash2mart-merchant-release-v1.0.${{ github.run_number }}
+          path: build/app/outputs/flutter-apk/flash2mart-merchant-release.apk
+
+      - name: Publish to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/app/outputs/flutter-apk/flash2mart-merchant-release.apk
+          tag_name: release-${{ github.ref_name }}-${{ github.run_number }}
+          name: Flash2Mart Merchant (${{ github.ref_name }} #${{ github.run_number }})
+          body: |
+            🚀 Automatic Release for Flash2Mart Merchant
+            • Branch: `${{ github.ref_name }}`
+            • APK: `flash2mart-merchant-release.apk`
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

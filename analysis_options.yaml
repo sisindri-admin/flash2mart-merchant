@@ -1,0 +1,14 @@
+# Flash2Mart Merchant App Analysis Options
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
+
+linter:
+  rules:
+    avoid_print: false
