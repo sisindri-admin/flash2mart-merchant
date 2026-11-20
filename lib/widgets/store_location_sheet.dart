@@ -236,6 +236,37 @@ class _StoreLocationSheetState extends State<StoreLocationSheet> {
           .doc(user.uid)
           .set(docData, SetOptions(merge: true));
 
+      if (_latitude != null && _longitude != null) {
+        final point = GeoPoint(_latitude!, _longitude!);
+        try {
+          final activeOrders = await FirebaseFirestore.instance
+              .collection('orders')
+              .where('merchantId', isEqualTo: user.uid)
+              .get();
+          for (final oDoc in activeOrders.docs) {
+            final os = (oDoc.data()['orderStatus'] ?? oDoc.data()['status'] ?? '').toString().toLowerCase();
+            if (os == 'delivered' || os == 'completed' || os == 'cancelled') continue;
+            await oDoc.reference.update({
+              'storeLocation': point,
+              'merchantLocation': point,
+              'storeLat': _latitude!,
+              'storeLng': _longitude!,
+            });
+          }
+          final prods = await FirebaseFirestore.instance
+              .collection('products')
+              .where('merchantId', isEqualTo: user.uid)
+              .get();
+          for (final pDoc in prods.docs) {
+            await pDoc.reference.update({
+              'storeLocation': point,
+              'storeLat': _latitude!,
+              'storeLng': _longitude!,
+            });
+          }
+        } catch (_) {}
+      }
+
       if (widget.onSaved != null) {
         widget.onSaved!();
       }
